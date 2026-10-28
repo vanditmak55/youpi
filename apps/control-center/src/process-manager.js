@@ -60,6 +60,17 @@ export class ProcessManager extends EventEmitter {
         pid: null
       },
       {
+        id: 'setup-hub',
+        name: 'Setup Hub',
+        script: path.join(rootDir, 'apps/setup-hub/src/index.js'),
+        port: Number(process.env.SETUP_HUB_PORT || 8095),
+        healthPath: '/health',
+        child: null,
+        status: 'STOPPED',
+        startTime: null,
+        pid: null
+      },
+      {
         id: 'sms-observer',
         name: 'Google Messages / SMS Observer (Legacy)',
         script: path.join(rootDir, 'apps/sms-observer/src/index.js'),

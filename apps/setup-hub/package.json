@@ -1,0 +1,14 @@
+{
+  "name": "setup-hub",
+  "version": "1.0.0",
+  "description": "Single local page to configure and monitor every YOUPI PG piece",
+  "type": "module",
+  "main": "./src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "@youpi/common": "*",
+    "@youpi/core": "*"
+  }
+}

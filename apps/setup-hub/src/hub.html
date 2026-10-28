@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>YOUPI Setup Hub</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #ffffff; --ink: #14171c; --muted: #5d6573; --line: #e3e6eb;
+    --ok: #0f8a5f; --ok-bg: #e5f5ee; --warn: #a15c00; --warn-bg: #fdf1df; --bad: #b4232c; --bad-bg: #fbe7e8;
+    --accent: #2f5bd3; --accent-ink: #ffffff; --code: #f0f2f5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1216; --card: #171b21; --ink: #e8ebf0; --muted: #98a1ae; --line: #262c35;
+      --ok: #3ccf91; --ok-bg: #11291f; --warn: #f0b04a; --warn-bg: #2e2414; --bad: #f2727a; --bad-bg: #321a1c;
+      --accent: #7c9cff; --accent-ink: #0f1216; --code: #20262e;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 28px 16px 60px; }
+  header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 20px; }
+  h1 { font-size: 22px; margin: 0; letter-spacing: -0.01em; }
+  h2 { font-size: 16px; margin: 0; }
+  .sub { color: var(--muted); font-size: 13px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+  .card.wide { grid-column: 1 / -1; }
+  .head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .pill { font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 99px; white-space: nowrap; }
+  .pill.ok { color: var(--ok); background: var(--ok-bg); }
+  .pill.warn { color: var(--warn); background: var(--warn-bg); }
+  .pill.bad { color: var(--bad); background: var(--bad-bg); }
+  .todo { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .todo li { display: flex; gap: 10px; align-items: flex-start; }
+  .todo .dot { flex: none; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 700; margin-top: 1px; }
+  .todo .done .dot { background: var(--ok-bg); color: var(--ok); }
+  .todo .need .dot { background: var(--warn-bg); color: var(--warn); }
+  .todo .done .txt { color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  td, th { text-align: left; padding: 7px 6px; border-top: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 500; font-size: 12px; border-top: none; }
+  a { color: var(--accent); }
+  code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
+  code { background: var(--code); padding: 1px 5px; border-radius: 5px; word-break: break-all; }
+  form { display: flex; flex-wrap: wrap; gap: 8px; }
+  input { flex: 1 1 160px; min-width: 0; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); font: inherit; }
+  button { padding: 8px 14px; border: 0; border-radius: 8px; background: var(--accent); color: var(--accent-ink); font: inherit; font-weight: 600; cursor: pointer; }
+  button.ghost { background: transparent; color: var(--accent); border: 1px solid var(--line); }
+  button:disabled { opacity: .55; cursor: default; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .qr { background: #fff; padding: 10px; border-radius: 10px; width: 220px; max-width: 100%; }
+  .qr svg, .qr img { display: block; width: 100%; height: auto; }
+  .qrs { display: flex; flex-wrap: wrap; gap: 18px; }
+  .qrs figure { margin: 0; display: flex; flex-direction: column; gap: 6px; max-width: 240px; }
+  figcaption { font-size: 13px; color: var(--muted); }
+  .note { font-size: 13px; color: var(--muted); }
+  .msg { font-size: 13px; min-height: 1em; }
+  .msg.err { color: var(--bad); }
+  .msg.okm { color: var(--ok); }
+  ol.steps { margin: 0; padding-left: 20px; font-size: 14px; display: flex; flex-direction: column; gap: 4px; }
+  .code-big { font-size: 26px; letter-spacing: .15em; font-weight: 700; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>YOUPI Setup Hub</h1>
+      <div class="sub">Everything in one place. This page refreshes itself every few seconds.</div>
+    </div>
+    <div class="sub" id="lan">Wi-Fi address: …</div>
+  </header>
+
+  <div class="grid">
+    <section class="card wide">
+      <div class="head"><h2>What's left</h2><span class="pill" id="progressPill">…</span></div>
+      <ul class="todo" id="todo"></ul>
+    </section>
+
+    <section class="card">
+      <div class="head"><h2>1. Receiving UPI account</h2><span class="pill" id="upiPill">…</span></div>
+      <div id="upiList"></div>
+      <form id="upiForm">
+        <input name="upiId" placeholder="UPI ID, e.g. name@okhdfcbank" required />
+        <input name="payeeName" placeholder="Name shown to customers" />
+        <button>Add &amp; make active</button>
+      </form>
+      <div class="msg" id="upiMsg"></div>
+    </section>
+
+    <section class="card">
+      <div class="head"><h2>2. WhatsApp (login codes)</h2><span class="pill" id="waPill">…</span></div>
+      <div id="waConnected" class="hidden">
+        <div>Linked as <strong id="waPhone"></strong>.</div>
+        <form id="waTestForm">
+          <input name="to" placeholder="Send a test to, e.g. 9876543210" required />
+          <button>Send test</button>
+        </form>
+        <div class="row"><button class="ghost" id="waDisconnect">Unlink</button></div>
+      </div>
+      <div id="waSetup">
+        <ol class="steps">
+          <li>Click <strong>Show QR</strong>.</li>
+          <li>On the phone: WhatsApp → Settings → Linked devices → Link a device.</li>
+          <li>Scan the QR below. It changes every ~20 seconds; this page keeps it fresh.</li>
+        </ol>
+        <div class="row"><button id="waConnect">Show QR</button></div>
+        <div class="qr hidden" id="waQr"></div>
+        <details>
+          <summary class="note">Can't scan? Link with a phone-number code instead</summary>
+          <form id="waCodeForm" style="margin-top:8px">
+            <input name="phoneNumber" placeholder="WhatsApp number with country code, e.g. 919876543210" required />
+            <button>Get code</button>
+          </form>
+          <div class="code-big mono hidden" id="waCode"></div>
+        </details>
+        <div class="note">Tip: use a spare or business number. Unofficial WhatsApp links can get a number banned.</div>
+      </div>
+      <div class="msg" id="waMsg"></div>
+    </section>
+
+    <section class="card wide">
+      <div class="head"><h2>3. Android phone (payment detector)</h2><span class="pill" id="andPill">…</span></div>
+      <ol class="steps">
+        <li>Use the phone that gets your bank SMS. Any internet connection works; it talks to the public tunnel.</li>
+        <li>Scan <strong>Download app</strong> with the phone camera and install it (allow "install unknown apps").</li>
+        <li>Open the YOUPI Observer app, scan <strong>Pair this phone</strong>, then tap Pair.</li>
+        <li>Grant notification access (and SMS access if asked).</li>
+      </ol>
+      <div class="row"><button id="andShow">Show pairing QR</button><span class="note" id="andExpiry"></span></div>
+      <div class="qrs hidden" id="andQrs">
+        <figure><div class="qr" id="apkQr"></div><figcaption>Download app<br><a id="apkLink" class="mono" href="#"></a></figcaption></figure>
+        <figure><div class="qr" id="pairQr"></div><figcaption>Pair this phone<br>Or type gateway <code id="gwUrl"></code> and token <code id="enrollTok"></code></figcaption></figure>
+      </div>
+      <div id="andList"></div>
+      <div class="msg" id="andMsg"></div>
+    </section>
+
+    <section class="card">
+      <div class="head"><h2>4. Gmail (optional detector)</h2><span class="pill" id="gmPill">…</span></div>
+      <div class="note">Only needed if your bank emails you for every credit. You need a Google Cloud OAuth client (Gmail API enabled) with redirect URI <code id="gmRedirect"></code>.</div>
+      <form id="gmForm">
+        <input name="clientId" placeholder="OAuth client ID" />
+        <input name="clientSecret" placeholder="OAuth client secret" type="password" />
+        <button>Save</button>
+      </form>
+      <div class="row"><button class="ghost" id="gmConnect">Sign in with Google</button></div>
+      <div class="msg" id="gmMsg"></div>
+    </section>
+
+    <section class="card">
+      <div class="head"><h2>Services</h2><span class="pill" id="svcPill">…</span></div>
+      <table><thead><tr><th>Service</th><th>This Mac</th><th>Public URL</th></tr></thead><tbody id="svcRows"></tbody></table>
+      <div class="note hidden" id="airplayNote">Ports 5000 and 7000 are taken by macOS AirPlay Receiver, so checkout and the demo store can't start. Turn it off in System Settings → General → AirDrop &amp; Handoff, then restart the services.</div>
+    </section>
+
+    <section class="card wide">
+      <div class="head"><h2>5. Test a payment</h2></div>
+      <ol class="steps">
+        <li>Open the <a id="storeLink" href="http://127.0.0.1:5000" target="_blank">demo store</a> (works from any device) and buy something for ₹1.</li>
+        <li>Log in with the WhatsApp code, then pay the QR from a <em>different</em> UPI account.</li>
+        <li>Tap "Payment done". The Android detector sees the bank alert and the store shows success.</li>
+        <li>Watch it live in <a href="http://127.0.0.1:6001" target="_blank">Merchant Admin</a>.</li>
+      </ol>
+      <div class="note" id="merchantInfo"></div>
+    </section>
+  </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+let state = null;
+let waPolling = null;
+
+async function call(path, body) {
+  const res = await fetch(path, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {});
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+function say(id, text, ok) { const el = $(id); el.textContent = text || ''; el.className = 'msg ' + (text ? (ok ? 'okm' : 'err') : ''); }
+function pill(id, cls, text) { const el = $(id); el.className = 'pill ' + cls; el.textContent = text; }
+
+function render(s) {
+  state = s;
+  $('lan').textContent = s.lanIp ? 'Wi-Fi address: ' + s.lanIp : 'No Wi-Fi address found';
+
+  // Services
+  let up = 0, airplay = false;
+  $('svcRows').innerHTML = s.services.map((x) => {
+    if (x.local.ok) up++;
+    if (x.local.airplay) airplay = true;
+    const local = x.local.ok ? `<a href="${x.url}" target="_blank">running</a>`
+      : x.local.airplay ? '<span style="color:var(--bad)">blocked by AirPlay</span>'
+      : '<span style="color:var(--bad)">down</span>';
+    const lan = !x.publicUrl ? '<span class="note">this Mac only</span>'
+      : x.pubReach?.ok ? `<a href="${x.publicUrl}" target="_blank" class="mono">${esc(x.publicUrl.replace('https://', ''))}</a>`
+      : '<span style="color:var(--bad)">tunnel down</span>';
+    return `<tr><td>${esc(x.name)}</td><td>${local}</td><td>${lan}</td></tr>`;
+  }).join('');
+  pill('svcPill', up === s.services.length ? 'ok' : 'bad', `${up}/${s.services.length} up`);
+  const store = s.services.find((x) => x.key === 'store');
+  if (store?.publicUrl) $('storeLink').href = store.publicUrl;
+  $('airplayNote').classList.toggle('hidden', !airplay);
+
+  // UPI
+  const active = s.upi.accounts.find((a) => a.isActive);
+  $('upiList').innerHTML = s.upi.accounts.length
+    ? s.upi.accounts.map((a) => `<div><code>${esc(a.upiId)}</code> · ${esc(a.payeeName || '')} ${a.isActive ? '<span class="pill ok">active</span>' : ''}</div>`).join('')
+    : '<div class="note">No UPI account yet.</div>';
+  pill('upiPill', active ? 'ok' : 'warn', active ? 'Done' : 'Needed');
+
+  // WhatsApp
+  const wa = s.whatsapp;
+  $('waConnected').classList.toggle('hidden', !wa.connected);
+  $('waSetup').classList.toggle('hidden', wa.connected);
+  $('waPhone').textContent = wa.phoneNumber || 'connected';
+  pill('waPill', wa.connected ? 'ok' : 'warn', wa.connected ? 'Linked' : wa.status === 'CONNECTING' ? 'Waiting for scan' : 'Needed');
+  if (wa.connected && waPolling) { clearInterval(waPolling); waPolling = null; $('waQr').classList.add('hidden'); }
+
+  // Android
+  const devs = s.android.devices;
+  $('andList').innerHTML = devs.length
+    ? '<table><thead><tr><th>Paired phone</th><th>Last heartbeat</th></tr></thead><tbody>' + devs.map((d) =>
+        `<tr><td>${esc(d.deviceName || d.name || d.deviceModel || d.id)}</td><td>${esc(d.lastHeartbeatAt || d.last_heartbeat_at || '—')}</td></tr>`).join('') + '</tbody></table>'
+    : '';
+  pill('andPill', devs.length ? 'ok' : 'warn', devs.length ? `${devs.length} paired` : 'Needed');
+
+  // Gmail
+  const gm = s.gmail;
+  $('gmRedirect').textContent = gm.redirectUri;
+  pill('gmPill', gm.connectedEmail ? 'ok' : gm.hasClientId ? 'warn' : '', gm.connectedEmail ? 'Connected' : gm.hasClientId ? 'Sign-in needed' : 'Optional');
+  if (gm.connectedEmail) say('gmMsg', 'Connected as ' + gm.connectedEmail, true);
+
+  $('merchantInfo').innerHTML = s.merchant.businessName
+    ? `Store: <strong>${esc(s.merchant.businessName)}</strong> · webhook <code>${esc(s.merchant.webhookUrl || 'not set')}</code>` : '';
+
+  // Checklist
+  const items = [
+    { done: !airplay, text: airplay ? 'Turn off AirPlay Receiver (System Settings → General → AirDrop & Handoff), then restart the services. It holds ports 5000 and 7000, so checkout and the demo store can\'t start.' : 'Ports 5000 and 7000 are free' },
+    { done: up === s.services.length, text: up === s.services.length ? 'All services running' : 'Some services are down (see Services)' },
+    { done: Boolean(active), text: active ? `UPI account ${active.upiId} is active` : 'Add the UPI ID customers should pay (section 1)' },
+    { done: wa.connected, text: wa.connected ? 'WhatsApp linked' : 'Scan the WhatsApp QR with your phone (section 2)' },
+    { done: devs.length > 0, text: devs.length ? 'Android detector paired' : 'Install and pair the Android app on the phone that gets bank SMS (section 3). Until a detector is online the gateway refuses new payments, so checkout will not open.' }
+  ];
+  $('todo').innerHTML = items.map((i) => `<li class="${i.done ? 'done' : 'need'}"><span class="dot">${i.done ? '✓' : '!'}</span><span class="txt">${esc(i.text)}</span></li>`).join('');
+  const required = items;
+  const done = required.filter((i) => i.done).length;
+  pill('progressPill', done === required.length ? 'ok' : 'warn', done === required.length ? 'Ready to take payments' : `${done}/${required.length} done`);
+}
+
+async function refresh() {
+  try { render(await call('/api/state')); } catch (e) { $('lan').textContent = 'Setup Hub cannot reach the gateway: ' + e.message; }
+}
+
+$('upiForm').onsubmit = async (e) => {
+  e.preventDefault();
+  const f = new FormData(e.target);
+  try { await call('/api/upi', { upiId: f.get('upiId').trim(), payeeName: f.get('payeeName').trim() }); say('upiMsg', 'Saved and set active.', true); e.target.reset(); refresh(); }
+  catch (err) { say('upiMsg', err.message); }
+};
+
+async function loadWaQr() {
+  try {
+    const r = await call('/api/whatsapp/qr');
+    if (r.qrCode && String(r.qrCode).startsWith('data:image/')) {
+      $('waQr').innerHTML = `<img alt="WhatsApp link QR" src="${r.qrCode}">`;
+      $('waQr').classList.remove('hidden');
+      say('waMsg', '');
+    } else if (!state?.whatsapp.connected) {
+      say('waMsg', 'Waiting for WhatsApp to issue a QR…', true);
+    }
+  } catch (err) { say('waMsg', err.message); }
+}
+$('waConnect').onclick = async () => {
+  $('waConnect').disabled = true;
+  try { await call('/api/whatsapp/connect', {}); } catch (err) { say('waMsg', err.message); }
+  $('waConnect').disabled = false;
+  loadWaQr();
+  if (!waPolling) waPolling = setInterval(loadWaQr, 4000);
+};
+$('waCodeForm').onsubmit = async (e) => {
+  e.preventDefault();
+  try {
+    const r = await call('/api/whatsapp/pairing-code', { phoneNumber: new FormData(e.target).get('phoneNumber').trim() });
+    const code = r.pairingCode || r.code;
+    $('waCode').textContent = code || '';
+    $('waCode').classList.toggle('hidden', !code);
+    say('waMsg', code ? 'In WhatsApp: Linked devices → Link with phone number instead → enter this code.' : (r.message || 'Requested.'), true);
+  } catch (err) { say('waMsg', err.message); }
+};
+$('waTestForm').onsubmit = async (e) => {
+  e.preventDefault();
+  try { await call('/api/whatsapp/test', { to: new FormData(e.target).get('to').trim(), message: 'YOUPI test message ✅' }); say('waMsg', 'Test message sent.', true); }
+  catch (err) { say('waMsg', err.message); }
+};
+$('waDisconnect').onclick = async () => {
+  if (!confirm('Unlink WhatsApp from the gateway?')) return;
+  try { await call('/api/whatsapp/disconnect', {}); refresh(); } catch (err) { say('waMsg', err.message); }
+};
+
+$('andShow').onclick = async () => {
+  try {
+    const p = await call('/api/android/pairing');
+    $('apkQr').innerHTML = p.apkQrSvg;
+    $('pairQr').innerHTML = p.pairingQrSvg;
+    $('apkLink').textContent = p.apkUrl.replace('http://', '');
+    $('apkLink').href = p.apkUrl;
+    $('gwUrl').textContent = p.gatewayUrl;
+    $('enrollTok').textContent = p.enrollmentToken;
+    $('andQrs').classList.remove('hidden');
+    $('andExpiry').textContent = 'Pairing QR valid until ' + new Date(p.expiresAt).toLocaleTimeString();
+    say('andMsg', '');
+  } catch (err) { say('andMsg', err.message); }
+};
+
+$('gmForm').onsubmit = async (e) => {
+  e.preventDefault();
+  const f = new FormData(e.target);
+  try { await call('/api/gmail/credentials', { clientId: f.get('clientId').trim(), clientSecret: f.get('clientSecret').trim() }); say('gmMsg', 'Saved. Now click Sign in with Google.', true); e.target.reset(); refresh(); }
+  catch (err) { say('gmMsg', err.message); }
+};
+$('gmConnect').onclick = async () => {
+  try { const r = await call('/api/gmail/oauth'); window.open(r.authUrl, '_blank'); }
+  catch (err) { say('gmMsg', err.message); }
+};
+
+refresh();
+setInterval(refresh, 5000);
+</script>
+</body>
+</html>
